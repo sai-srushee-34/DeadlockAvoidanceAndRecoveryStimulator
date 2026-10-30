@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Deadlock Prevention and Recovery System | Kernel Subsystem</title>
+  
+  <!-- Google Fonts: Geist, JetBrains Mono, Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+  
+  <!-- Tailwind CSS via CDN with customized Google Stitch design tokens -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "tertiary": "#006243",
+            "primary-fixed": "#dbe1ff",
+            "on-surface-variant": "#434655",
+            "surface-dim": "#cbdbf5",
+            "surface-container-lowest": "#ffffff",
+            "tertiary-fixed": "#85f8c4",
+            "on-surface": "#0b1c30",
+            "surface-container": "#e5eeff",
+            "background": "#f8f9ff",
+            "inverse-on-surface": "#eaf1ff",
+            "surface-container-high": "#dce9ff",
+            "on-secondary-container": "#5c647a",
+            "surface-bright": "#f8f9ff",
+            "surface-container-highest": "#d3e4fe",
+            "surface": "#f8f9ff",
+            "tertiary-container": "#007d57",
+            "inverse-primary": "#b4c5ff",
+            "primary-fixed-dim": "#b4c5ff",
+            "surface-variant": "#d3e4fe",
+            "on-primary": "#ffffff",
+            "error-container": "#ffdad6",
+            "outline-variant": "#c3c6d7",
+            "on-secondary-fixed-variant": "#3f465c",
+            "tertiary-fixed-dim": "#68dba9",
+            "on-tertiary-container": "#bdffdc",
+            "secondary": "#565e74",
+            "on-error": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "surface-container-low": "#eff4ff",
+            "on-primary-container": "#eeefff",
+            "primary": "#004ac6",
+            "on-secondary-fixed": "#131b2e",
+            "on-tertiary-fixed-variant": "#005137",
+            "secondary-fixed": "#dae2fd",
+            "inverse-surface": "#213145",
+            "on-tertiary-fixed": "#002114",
+            "on-secondary": "#ffffff",
+            "on-error-container": "#93000a",
+            "secondary-container": "#dae2fd",
+            "on-primary-fixed-variant": "#003ea8",
+            "outline": "#737686",
+            "on-primary-fixed": "#00174b",
+            "primary-container": "#2563eb",
+            "on-background": "#0b1c30",
+            "surface-tint": "#0053db",
+            "secondary-fixed-dim": "#bec6e0",
+            "error": "#ba1a1a"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            "space-xl": "1.5rem",
+            "space-sm": "0.375rem",
+            "space-md": "0.75rem",
+            "space-xs": "0.25rem",
+            "gutter": "0.75rem",
+            "gutter-desktop": "1rem",
+            "margin-desktop": "1.5rem",
+            "margin": "1rem",
+            "space-lg": "1rem"
+          },
+          fontFamily: {
+            "headline-sm": ["Geist"],
+            "headline-md": ["Geist"],
+            "label-md": ["JetBrains Mono"],
+            "body-sm": ["Geist"],
+            "label-xs": ["JetBrains Mono"],
+            "body-md": ["Geist"],
+            "label-sm": ["JetBrains Mono"],
+            "headline-lg": ["Geist"]
+          },
+          fontSize: {
+            "headline-sm": ["15px", { lineHeight: "20px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "headline-md": ["18px", { lineHeight: "24px", letterSpacing: "-0.015em", fontWeight: "600" }],
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "-0.01em", fontWeight: "500" }],
+            "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+            "label-xs": ["10px", { lineHeight: "12px", letterSpacing: "0.02em", fontWeight: "400" }],
+            "body-md": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+            "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0em", fontWeight: "500" }],
+            "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body class="bg-surface font-body-md text-body-md text-on-surface antialiased overflow-x-hidden">
+
+  <!-- ========================================================================= -->
+  <!-- SIDEBAR NAVIGATION (Google Stitch Architectural Layout)                   -->
+  <!-- ========================================================================= -->
+  <aside class="fixed left-0 top-0 h-full w-[230px] bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-r border-surface-container-high/60">
+    <div class="flex flex-col">
+      <!-- Brand Header -->
+      <div class="h-[52px] px-space-md flex items-center gap-space-sm bg-surface-container-low border-b border-surface-container-high/40">
+        <span class="material-symbols-outlined text-primary text-[20px]">memory</span>
+        <div class="flex flex-col min-w-0">
+          <span class="font-label-sm text-label-sm uppercase font-semibold text-on-surface tracking-wider truncate">Deadlock Simulator</span>
+          <span class="font-label-xs text-label-xs text-outline truncate">OS Kernel Subsystem v2.4</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="px-space-xs py-space-sm">
+        <nav class="flex flex-col gap-space-xs">
+          <!-- 1. Dashboard -->
+          <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-colors bg-surface-container text-primary font-semibold" data-screen="dashboard" href="#dashboard" aria-current="page">
+            <span class="material-symbols-outlined text-[18px]">grid_view</span>
+            <span>Dashboard</span>
+          </a>
+          <!-- 2. Processes -->
+          <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-screen="processes" href="#processes">
+            <span class="material-symbols-outlined text-[18px]">terminal</span>
+            <span>Processes</span>
+          </a>
+          <!-- 3. Resources -->
+          <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-screen="resources" href="#resources">
+            <span class="material-symbols-outlined text-[18px]">dns</span>
+            <span>Resources</span>
+          </a>
+          <!-- 4. Prevention -->
+          <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-screen="prevention" href="#prevention">
+            <span class="material-symbols-outlined text-[18px]">verified_user</span>
+            <span>Prevention</span>
+          </a>
+          <!-- 5. Detection -->
+          <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-screen="detection" href="#detection">
+            <span class="material-symbols-outlined text-[18px]">troubleshoot</span>
+            <span>Detection</span>
+          </a>
+          <!-- 6. Recovery -->
+          <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-screen="recovery" href="#recovery">
+            <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+            <span>Recovery</span>
+          </a>
+          <!-- 7. Event Log -->
+          <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-screen="event-log" href="#event-log">
+            <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+            <span>Event Log</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Engine Telemetry Status Footer -->
+    <div class="p-space-md m-space-sm bg-surface-container-low rounded flex flex-col gap-space-xs border border-surface-container-high/40">
+      <div class="flex items-center justify-between">
+        <span class="font-label-xs text-label-xs text-outline uppercase">Engine</span>
+        <span class="font-label-xs text-label-xs font-semibold text-tertiary">Bankers & RAG</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="font-label-xs text-label-xs text-outline uppercase">Adapter</span>
+        <span id="sidebar-adapter-badge" class="font-label-xs text-label-xs text-primary font-semibold font-mono">Live C++ API</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="font-label-xs text-label-xs text-outline uppercase">C++ Bridge</span>
+        <span id="sidebar-bridge-badge" class="font-label-xs text-label-xs text-tertiary font-semibold font-mono">Connecting...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN APP CONTAINER                                                        -->
+  <!-- ========================================================================= -->
+  <div class="pl-[230px]">
+    
+    <!-- FIXED TOP HEADER -->
+    <header class="fixed top-0 left-[230px] right-0 h-[52px] bg-surface-container-lowest/90 backdrop-blur-md z-40 px-space-lg flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-container-high/40">
+      <!-- Breadcrumbs -->
+      <div class="flex items-center gap-space-sm min-w-0">
+        <span class="material-symbols-outlined text-outline text-[18px]">terminal</span>
+        <div class="flex items-center gap-space-xs font-label-sm text-label-sm truncate">
+          <span class="text-outline">Kernel</span>
+          <span class="text-outline">/</span>
+          <span class="text-on-surface font-semibold" id="header-breadcrumb-title">System Overview</span>
+        </div>
+      </div>
+
+      <!-- Action & Telemetry Controls -->
+      <div class="flex items-center gap-space-md">
+        <!-- Live Status Pill -->
+        <div id="header-state-pill" class="flex items-center gap-space-xs px-space-sm py-0.5 rounded bg-tertiary-fixed-dim/20 text-tertiary font-label-xs text-label-xs font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+          <span>SAFE STATE</span>
+        </div>
+
+        <!-- Scenario Selector -->
+        <div class="relative">
+          <select id="header-scenario-select" class="h-7 pl-space-sm pr-space-lg bg-surface-container-low text-on-surface font-label-xs text-label-xs rounded appearance-none cursor-pointer focus:outline-none focus:bg-surface-container border border-surface-container-high/60">
+            <!-- Dynamically populated -->
+          </select>
+          <span class="material-symbols-outlined absolute right-1 top-1.5 pointer-events-none text-outline text-[14px]">expand_more</span>
+        </div>
+
+        <!-- Reset State Button -->
+        <button id="header-btn-reset" class="h-7 px-space-sm flex items-center gap-space-xs rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm hover:bg-surface-container transition-colors border border-surface-container-high/60" type="button">
+          <span class="material-symbols-outlined text-[16px]">refresh</span>
+          <span>Reset State</span>
+        </button>
+
+        <!-- Run Detection Button -->
+        <button id="header-btn-detect" class="h-7 px-space-md flex items-center gap-space-xs rounded bg-primary-container text-on-primary font-body-sm text-body-sm font-medium hover:bg-primary transition-colors shadow-sm" type="button">
+          <span class="material-symbols-outlined text-[16px]">search</span>
+          <span>Run Detection</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN VIEWPORTS CONTAINER -->
+    <main class="relative pt-[52px] min-h-screen bg-background w-full px-gutter-desktop pb-space-xl">
+      
+      <!-- ===================================================================== -->
+      <!-- 1. SCREEN: DASHBOARD                                                  -->
+      <!-- ===================================================================== -->
+      <section id="screen-dashboard" class="screen-view active flex-col w-full py-space-md gap-space-lg">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Live Telemetry</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono">Bipartite Graph & Matrices</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">System Resource & Deadlock Dashboard</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Real-time monitoring of process allocation states, outstanding claim requests, and graph reducibility. Demonstrates multiple-instance resource conservation invariants across the kernel.
+            </p>
+          </div>
+          <div class="flex items-center gap-space-md shrink-0 bg-surface-container-low px-space-md py-space-sm rounded border border-surface-container-high/40">
+            <div class="flex flex-col">
+              <span class="font-label-xs text-label-xs uppercase text-outline">Adapter Engine</span>
+              <span class="font-label-sm text-label-sm font-semibold text-primary font-mono flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-primary"></span> MOCK DEMO (C++ PENDING)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+          <!-- Card 1: Reducibility Status -->
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-outline">
+              <span class="font-label-xs text-label-xs uppercase font-semibold">Graph Reducibility</span>
+              <span id="kpi-state-indicator" class="px-space-xs py-0.5 rounded bg-tertiary-fixed-dim/20 text-tertiary font-label-xs text-label-xs font-semibold">SAFE</span>
+            </div>
+            <span id="kpi-state-title" class="font-headline-sm text-headline-sm text-tertiary">SYSTEM SAFE</span>
+            <span id="kpi-state-desc" class="font-body-sm text-body-sm text-on-surface-variant truncate">Zero unresolvable cycles</span>
+          </div>
+
+          <!-- Card 2: Resource Utilization -->
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-outline">
+              <span class="font-label-xs text-label-xs uppercase font-semibold">Resource Utilization</span>
+              <span class="material-symbols-outlined text-[16px] text-primary">pie_chart</span>
+            </div>
+            <span id="kpi-util-val" class="font-headline-sm text-headline-sm text-on-surface font-mono">0.0%</span>
+            <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden my-1">
+              <div id="kpi-util-bar" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="kpi-util-desc" class="font-body-sm text-body-sm text-on-surface-variant truncate">0 / 0 instances allocated</span>
+          </div>
+
+          <!-- Card 3: Active Threads / Processes -->
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-outline">
+              <span class="font-label-xs text-label-xs uppercase font-semibold">Process Register</span>
+              <span class="material-symbols-outlined text-[16px] text-outline">terminal</span>
+            </div>
+            <span id="kpi-threads-val" class="font-headline-sm text-headline-sm text-on-surface font-mono">0 Processes</span>
+            <span id="kpi-threads-desc" class="font-body-sm text-body-sm text-on-surface-variant truncate">0 Running • 0 Waiting</span>
+          </div>
+
+          <!-- Card 4: Outstanding Claims -->
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-outline">
+              <span class="font-label-xs text-label-xs uppercase font-semibold">Contention / Requests</span>
+              <span class="material-symbols-outlined text-[16px] text-outline">lock_clock</span>
+            </div>
+            <span id="kpi-requests-val" class="font-headline-sm text-headline-sm text-on-surface font-mono">0 Units</span>
+            <span id="kpi-requests-desc" class="font-body-sm text-body-sm text-on-surface-variant truncate">Pending requests in queue</span>
+          </div>
+        </div>
+
+        <!-- Available Vector Live Row -->
+        <div class="flex flex-col bg-surface-container-lowest p-space-md rounded shadow-sm gap-space-xs border border-surface-container-high/60">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-space-xs">
+              <span class="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Available Vector (Unallocated Instances)</span>
+            </div>
+            <span class="font-label-xs text-label-xs font-mono text-outline">Invariant: Available = Capacity - Σ(Allocation)</span>
+          </div>
+          <div id="dashboard-available-vector" class="flex flex-wrap gap-space-sm pt-space-xs">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- SVG Resource Allocation Graph (RAG) -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <!-- Graph Header & Toolbar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm bg-surface-container-low px-space-md py-space-sm rounded gap-space-sm">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-primary text-[20px]">hub</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Resource-Allocation Graph (RAG)</span>
+                <span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Directed Bipartite Multi-Instance Topology</span>
+              </div>
+            </div>
+
+            <!-- Graph Controls Toolbar -->
+            <div class="flex items-center gap-space-xs">
+              <div class="relative">
+                <select id="graph-edge-filter" class="h-7 pl-2 pr-6 bg-surface-container-lowest text-on-surface font-label-xs text-label-xs rounded appearance-none cursor-pointer border border-surface-container-high">
+                  <option value="all">Filter: All Edges</option>
+                  <option value="alloc">Allocation Edges Only (R → P)</option>
+                  <option value="req">Request Edges Only (P → R)</option>
+                </select>
+                <span class="material-symbols-outlined absolute right-1 top-1.5 pointer-events-none text-outline text-[14px]">expand_more</span>
+              </div>
+              <button id="graph-zoom-in" type="button" class="h-7 w-7 flex items-center justify-center bg-surface-container-lowest text-on-surface rounded hover:bg-surface-container shadow-sm border border-surface-container-high" title="Zoom In">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+              </button>
+              <button id="graph-zoom-out" type="button" class="h-7 w-7 flex items-center justify-center bg-surface-container-lowest text-on-surface rounded hover:bg-surface-container shadow-sm border border-surface-container-high" title="Zoom Out">
+                <span class="material-symbols-outlined text-[16px]">remove</span>
+              </button>
+              <button id="graph-reset-view" type="button" class="h-7 px-2 flex items-center gap-1 bg-surface-container-lowest text-on-surface rounded hover:bg-surface-container shadow-sm font-label-xs text-label-xs border border-surface-container-high" title="Reset View">
+                <span class="material-symbols-outlined text-[14px]">fullscreen_exit</span>
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SVG Canvas Container -->
+          <div id="rag-container" class="w-full h-[430px] rounded border border-surface-container-high overflow-hidden relative">
+            <!-- Rendered by graph.js -->
+          </div>
+
+          <!-- Graph Legend -->
+          <div class="flex flex-wrap items-center justify-between text-outline font-label-xs text-label-xs pt-space-xs gap-space-sm border-t border-surface-container-low">
+            <div class="flex items-center gap-space-md flex-wrap">
+              <span class="flex items-center gap-1 font-mono text-on-surface">
+                <span class="w-3 h-3 rounded-full border-2 border-primary bg-white inline-block"></span> Process Node
+              </span>
+              <span class="flex items-center gap-1 font-mono text-on-surface">
+                <span class="w-3.5 h-3 rounded bg-white border-2 border-slate-700 inline-block"></span> Resource Node
+              </span>
+              <span class="flex items-center gap-1 font-mono text-tertiary">
+                <span class="w-4 h-0.5 bg-tertiary inline-block"></span> Allocation Edge (R → P)
+              </span>
+              <span class="flex items-center gap-1 font-mono text-error">
+                <span class="w-4 h-0.5 border-b border-dashed border-error inline-block"></span> Request Edge (P → R)
+              </span>
+            </div>
+            <span class="font-mono text-outline">Tip: Drag canvas to pan • Scroll wheel to zoom</span>
+          </div>
+        </div>
+
+        <!-- Live System Matrices (Allocation, Request, Need) -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-xs gap-space-sm">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">table_chart</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Kernel State Matrices</span>
+                <span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Formal Verification Invariants</span>
+              </div>
+            </div>
+            <!-- Matrix Tabs -->
+            <div class="flex items-center gap-space-xs bg-surface-container-low p-1 rounded border border-surface-container-high/40">
+              <button id="tab-matrix-alloc" type="button" class="px-space-sm py-1 font-label-xs text-label-xs font-semibold rounded bg-surface-container text-primary border border-primary/20">
+                Allocation Matrix
+              </button>
+              <button id="tab-matrix-req" type="button" class="px-space-sm py-1 font-label-xs text-label-xs font-medium rounded text-on-surface-variant hover:bg-surface-container">
+                Request Matrix
+              </button>
+              <button id="tab-matrix-need" type="button" class="px-space-sm py-1 font-label-xs text-label-xs font-medium rounded text-on-surface-variant hover:bg-surface-container">
+                Need Matrix
+              </button>
+            </div>
+          </div>
+
+          <!-- Matrix View: Allocation -->
+          <div id="view-matrix-alloc" class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <div id="table-matrix-alloc"></div>
+          </div>
+          <!-- Matrix View: Request -->
+          <div id="view-matrix-req" class="overflow-x-auto rounded bg-surface border border-surface-container-high/50" style="display: none;">
+            <div id="table-matrix-req"></div>
+          </div>
+          <!-- Matrix View: Need -->
+          <div id="view-matrix-need" class="overflow-x-auto rounded bg-surface border border-surface-container-high/50" style="display: none;">
+            <div id="table-matrix-need"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- 2. SCREEN: PROCESSES                                                  -->
+      <!-- ===================================================================== -->
+      <section id="screen-processes" class="screen-view flex-col w-full py-space-md gap-space-lg">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Kernel Thread Subsystem</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono">Process Control Block (PCB)</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Process Registry & Claim Interface</h1>
+            <p id="proc-count-summary" class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Register new processes, inspect state allocations, and submit dynamic resource claims to test deadlock conditions.
+            </p>
+          </div>
+        </div>
+
+        <!-- Two-column Forms Grid: Add Process & Submit Request -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+          
+          <!-- Form 1: Register New Process -->
+          <div class="lg:col-span-6 flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+            <div class="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                <span class="material-symbols-outlined text-primary text-[18px]">person_add</span>
+                Register New Process
+              </span>
+              <span class="font-label-xs text-label-xs text-outline font-mono">sys_create_proc()</span>
+            </div>
+
+            <!-- Error Notification -->
+            <div id="add-proc-error" class="hidden p-space-sm bg-error-container text-on-error-container font-label-xs text-label-xs rounded font-semibold"></div>
+
+            <form id="form-add-process" class="flex flex-col gap-space-md">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Process ID *</label>
+                  <input id="add-proc-id" type="text" placeholder="e.g. P5" required class="h-8 px-space-sm bg-surface-container-low text-on-surface font-mono text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary uppercase"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Process Name *</label>
+                  <input id="add-proc-name" type="text" placeholder="e.g. Data-Ingest-Worker" required class="h-8 px-space-sm bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Scheduling Priority (1-10)</label>
+                  <input id="add-proc-prio" type="number" min="1" max="10" value="5" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-mono text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Base Termination Cost (1-100)</label>
+                  <input id="add-proc-cost" type="number" min="1" max="100" value="50" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-mono text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+              </div>
+
+              <!-- Initial Allocation per Resource -->
+              <div class="flex flex-col gap-1">
+                <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Initial Resource Grants (Optional)</label>
+                <div id="add-proc-alloc-inputs" class="grid grid-cols-3 gap-space-sm p-space-sm bg-surface rounded border border-surface-container-high/40">
+                  <!-- Dynamically populated per resource -->
+                </div>
+              </div>
+
+              <button type="submit" class="h-8 px-space-md bg-primary text-on-primary font-label-sm text-label-sm rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors self-start mt-1">
+                <span class="material-symbols-outlined text-[16px]">add_circle</span>
+                <span>Register Process</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Form 2: Submit Resource Request -->
+          <div class="lg:col-span-6 flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+            <div class="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                <span class="material-symbols-outlined text-primary text-[18px]">lock_open</span>
+                Submit Resource Request
+              </span>
+              <span class="font-label-xs text-label-xs text-outline font-mono">sys_resource_claim()</span>
+            </div>
+
+            <!-- Error Notification -->
+            <div id="req-error" class="hidden p-space-sm bg-error-container text-on-error-container font-label-xs text-label-xs rounded font-semibold"></div>
+
+            <form id="form-submit-request" class="flex flex-col gap-space-md">
+              <div class="flex flex-col gap-1">
+                <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Target Process *</label>
+                <select id="req-target-process" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary">
+                  <!-- Dynamically populated -->
+                </select>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Target Resource Class *</label>
+                  <select id="req-target-resource" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary">
+                    <!-- Dynamically populated -->
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Requested Quantity *</label>
+                  <input id="req-units" type="number" min="1" max="100" value="1" required class="h-8 px-space-sm bg-surface-container-low text-on-surface font-mono text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+              </div>
+
+              <div class="p-space-sm rounded bg-surface-container-low font-label-xs text-[11px] text-outline flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-primary">security</span>
+                <span>Active prevention rules (Havender condition checks) will be validated before allocating.</span>
+              </div>
+
+              <button type="submit" class="h-8 px-space-md bg-primary-container text-on-primary font-label-sm text-label-sm rounded hover:bg-primary flex items-center justify-center gap-1 transition-colors self-start mt-1">
+                <span class="material-symbols-outlined text-[16px]">send</span>
+                <span>Submit Resource Claim</span>
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- Process Registry Table -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex items-center justify-between pb-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">view_list</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Registered Process Table</span>
+            </div>
+            <button id="btn-clear-all-procs" type="button" class="h-7 px-space-sm flex items-center gap-1 rounded bg-error/10 text-error hover:bg-error hover:text-white font-label-xs text-label-xs transition-colors border border-error/30" title="Delete all registered processes">
+              <span class="material-symbols-outlined text-[14px]">delete_sweep</span>
+              <span>Clear All Processes</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+              <thead>
+                <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                  <th class="py-space-xs px-space-md">Process ID</th>
+                  <th class="py-space-xs px-space-md">Process Name</th>
+                  <th class="py-space-xs px-space-md">Status</th>
+                  <th class="py-space-xs px-space-md">Priority & Cost</th>
+                  <th class="py-space-xs px-space-md">Allocated Vector</th>
+                  <th class="py-space-xs px-space-md">Requested Vector</th>
+                  <th class="py-space-xs px-space-md text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="table-processes-body" class="divide-y divide-surface-container-high/40 text-on-surface font-mono">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- 3. SCREEN: RESOURCES                                                  -->
+      <!-- ===================================================================== -->
+      <section id="screen-resources" class="screen-view flex-col w-full py-space-md gap-space-lg">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Hardware Subsystem</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono">Resource Descriptor Blocks</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Resource Inventory & Capacity Management</h1>
+            <p id="res-count-summary" class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Inspect total instance capacities, utilization percentages, and hierarchical ordering ranks.
+            </p>
+          </div>
+        </div>
+
+        <!-- Add Resource Form & Capacity Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+          
+          <!-- Define Resource Form -->
+          <div class="lg:col-span-5 flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+            <div class="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                <span class="material-symbols-outlined text-primary text-[18px]">playlist_add</span>
+                Define New Resource Class
+              </span>
+              <span class="font-label-xs text-label-xs text-outline font-mono">sys_define_res()</span>
+            </div>
+
+            <!-- Error Notification -->
+            <div id="add-res-error" class="hidden p-space-sm bg-error-container text-on-error-container font-label-xs text-label-xs rounded font-semibold"></div>
+
+            <form id="form-add-resource" class="flex flex-col gap-space-md">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Resource ID *</label>
+                  <input id="add-res-id" type="text" placeholder="e.g. R4" required class="h-8 px-space-sm bg-surface-container-low text-on-surface font-mono text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary uppercase"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Resource Name *</label>
+                  <input id="add-res-name" type="text" placeholder="e.g. GPU Compute Unit" required class="h-8 px-space-sm bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Total Capacity *</label>
+                  <input id="add-res-capacity" type="number" min="1" max="100" value="4" required class="h-8 px-space-sm bg-surface-container-low text-on-surface font-mono text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Order Rank F(R)</label>
+                  <input id="add-res-rank" type="number" min="1" max="50" placeholder="Auto" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-mono text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Unit Label</label>
+                  <input id="add-res-unit" type="text" value="Units" placeholder="e.g. Cores" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded border border-surface-container-high focus:outline-none focus:border-primary"/>
+                </div>
+              </div>
+
+              <button type="submit" class="h-8 px-space-md bg-primary text-on-primary font-label-sm text-label-sm rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors self-start mt-1">
+                <span class="material-symbols-outlined text-[16px]">add_box</span>
+                <span>Define Resource</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Visual Instance Breakdown -->
+          <div class="lg:col-span-7 flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+            <div class="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                <span class="material-symbols-outlined text-outline text-[18px]">grid_on</span>
+                Multi-Instance Slot Map
+              </span>
+              <span class="font-label-xs text-label-xs text-outline font-mono">Legend: [A] Allocated • [✓] Available</span>
+            </div>
+            <div id="res-instances-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Resource Inventory Table -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex items-center justify-between pb-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">inventory_2</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Resource Classes Inventory</span>
+            </div>
+            <button id="btn-clear-all-resources" type="button" class="h-7 px-space-sm flex items-center gap-1 rounded bg-error/10 text-error hover:bg-error hover:text-white font-label-xs text-label-xs transition-colors border border-error/30" title="Delete all resource classes">
+              <span class="material-symbols-outlined text-[14px]">delete_sweep</span>
+              <span>Clear All Resources</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+              <thead>
+                <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                  <th class="py-space-xs px-space-md">Resource ID</th>
+                  <th class="py-space-xs px-space-md">Resource Name</th>
+                  <th class="py-space-xs px-space-md">Total Capacity</th>
+                  <th class="py-space-xs px-space-md">Allocated</th>
+                  <th class="py-space-xs px-space-md">Available</th>
+                  <th class="py-space-xs px-space-md">Order Rank</th>
+                  <th class="py-space-xs px-space-md">Utilization</th>
+                  <th class="py-space-xs px-space-md text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="table-resources-body" class="divide-y divide-surface-container-high/40 text-on-surface font-mono">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- 4. SCREEN: PREVENTION (Exact Google Stitch Prototype Reused)          -->
+      <!-- ===================================================================== -->
+      <section id="screen-prevention" class="screen-view flex-col w-full py-space-md gap-space-lg">
+        
+        <!-- Subsystem Banner & Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Invariant Enforcement</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono">Havender Formal Model 1968</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Deadlock Prevention Policies</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Enforce structural constraints to strictly invalidate Coffman conditions prior to resource dispatch. Unlike dynamic Avoidance (Banker's Algorithm), Prevention statically negates Hold-and-Wait or Circular-Wait invariants so deadlocks are mathematically impossible.
+            </p>
+          </div>
+          <!-- Prevention Mode Telemetry Pill -->
+          <div class="flex items-center gap-space-md shrink-0 bg-surface-container-low px-space-md py-space-sm rounded border border-surface-container-high/40">
+            <div class="flex flex-col">
+              <span class="font-label-xs text-label-xs uppercase text-outline">Interception Engine</span>
+              <span class="font-label-sm text-label-sm font-semibold text-tertiary flex items-center gap-1 font-mono">
+                <span class="w-2 h-2 rounded-full bg-tertiary"></span> ACTIVE (ZERO-WAIT)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison Callout: 4 Coffman Conditions -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-space-md">
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-outline">
+              <span class="font-label-xs text-label-xs uppercase">Coffman #1</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant font-semibold">Mutual Exclusion</span>
+            </div>
+            <span class="font-headline-sm text-headline-sm text-on-surface">Unavoidable</span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Non-shareable hardware resources (e.g. dedicated spoolers, tape drives).</span>
+          </div>
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 ring-1 ring-primary/20 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-primary">
+              <span class="font-label-xs text-label-xs uppercase font-semibold">Coffman #2</span>
+              <span class="font-label-xs text-label-xs font-semibold">Hold & Wait</span>
+            </div>
+            <span class="font-headline-sm text-headline-sm text-primary flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">verified</span> Negated (Sec. 1)
+            </span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Conservative simultaneous grant or total pre-relinquishment rule.</span>
+          </div>
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-outline">
+              <span class="font-label-xs text-label-xs uppercase">Coffman #3</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant font-semibold">No Preemption</span>
+            </div>
+            <span class="font-headline-sm text-headline-sm text-on-surface">Costly Fallback</span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Forces state save/restore and rollback on contested hardware locks.</span>
+          </div>
+          <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 ring-1 ring-primary/20 border border-surface-container-high/60">
+            <div class="flex items-center justify-between text-primary">
+              <span class="font-label-xs text-label-xs uppercase font-semibold">Coffman #4</span>
+              <span class="font-label-xs text-label-xs font-semibold">Circular Wait</span>
+            </div>
+            <span class="font-headline-sm text-headline-sm text-primary flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">verified</span> Negated (Sec. 2)
+            </span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Strict monotonic ordering F: R → ℕ preventing directed graph cycles.</span>
+          </div>
+        </div>
+
+        <!-- SECTION 1: Hold-and-Wait Prevention -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <!-- Header with Toggle -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm bg-surface-container-low px-space-md py-space-sm rounded gap-space-sm">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-primary text-[20px]">lock_reset</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Section 1: Hold-and-Wait Prevention (Havender Condition 1 & 2)</span>
+                <span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Rule: ∀P, Request(P, R_k) valid ⇔ Holds(P) = ∅ ∨ InitialAllocationPhase(P)</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-space-sm">
+              <span class="font-label-xs text-label-xs uppercase tracking-wider font-semibold text-tertiary">Policy Active</span>
+              <button id="toggle-hold-wait" role="switch" aria-checked="true" class="relative inline-flex h-6 w-11 items-center rounded-full bg-tertiary transition-colors focus:outline-none">
+                <span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Protocol Selector Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+            <div class="lg:col-span-5 flex flex-col gap-space-md">
+              <div class="flex flex-col gap-space-xs">
+                <label class="font-label-sm text-label-sm uppercase text-outline font-semibold">Mechanism Selection</label>
+                <div class="flex flex-col gap-space-sm">
+                  <!-- Protocol A -->
+                  <label class="flex items-start gap-space-sm p-space-md rounded bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors border border-surface-container-high/40">
+                    <input name="hw_protocol" type="radio" value="A" class="mt-1 text-primary focus:ring-0"/>
+                    <div class="flex flex-col">
+                      <span class="font-headline-sm text-headline-sm text-on-surface">Protocol A: Strict Conservative (All-at-Once)</span>
+                      <span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Process must request and be atomically granted <em>all</em> prospective resources prior to thread initiation. Execution blocked until complete set satisfies.</span>
+                      <span class="font-label-xs text-label-xs text-outline mt-1 font-mono">Metric: Low resource utilization; Zero mid-cycle starvation.</span>
+                    </div>
+                  </label>
+                  <!-- Protocol B (Default) -->
+                  <label class="flex items-start gap-space-sm p-space-md rounded bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors ring-1 ring-primary/30 border border-primary/40">
+                    <input name="hw_protocol" type="radio" value="B" checked class="mt-1 text-primary focus:ring-0"/>
+                    <div class="flex flex-col">
+                      <span class="font-headline-sm text-headline-sm text-on-surface">Protocol B: Release All Before New Request</span>
+                      <span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">A process may request incremental locks dynamically, but ONLY when it currently holds 0 allocations. All existing resources must be relinquished prior to issuing new demands.</span>
+                      <span class="font-label-xs text-label-xs text-tertiary mt-1 font-mono">Current Active System Standard • High throughput</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sandbox Interactive Tester -->
+            <div class="lg:col-span-7 flex flex-col gap-space-md bg-surface p-space-md rounded border border-surface-container-high/60">
+              <div class="flex items-center justify-between pb-space-xs">
+                <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                  <span class="material-symbols-outlined text-outline text-[16px]">science</span>
+                  Interactive Request Evaluation Sandbox
+                </span>
+                <span class="font-label-xs text-label-xs text-outline font-mono">Kernel Trap Simulator</span>
+              </div>
+
+              <!-- Context Inputs -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md p-space-md bg-surface-container-lowest rounded shadow-sm border border-surface-container-high/40">
+                <div class="flex flex-col gap-1">
+                  <span class="font-label-xs text-label-xs uppercase text-outline">Target Process</span>
+                  <select id="hw-target-process" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full border border-surface-container-high/50">
+                    <!-- Populated dynamically -->
+                  </select>
+                  <span id="hw-held-desc" class="font-label-xs text-label-xs text-outline">Currently holding: <strong class="text-on-surface">R1 (1 instance)</strong></span>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <span class="font-label-xs text-label-xs uppercase text-outline">Desired Additional Resource</span>
+                  <select id="hw-target-resource" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full border border-surface-container-high/50">
+                    <!-- Populated dynamically -->
+                  </select>
+                  <span class="font-label-xs text-label-xs text-outline">Simulated Syscall: <code class="font-mono text-primary">sys_resource_claim()</code></span>
+                </div>
+              </div>
+
+              <!-- Action Bar -->
+              <div class="flex flex-wrap items-center gap-space-sm">
+                <button id="btn-eval-hw" type="button" class="h-8 px-space-md bg-primary text-on-primary font-label-sm text-label-sm rounded hover:bg-primary/90 flex items-center gap-1 transition-colors">
+                  <span class="material-symbols-outlined text-[16px]">gavel</span>
+                  <span>Dispatch Raw Claim Syscall</span>
+                </button>
+                <button id="btn-auto-release-hw" type="button" class="h-8 px-space-md bg-surface-container-lowest text-on-surface font-label-sm text-label-sm rounded hover:bg-surface-container flex items-center gap-1 transition-colors shadow-sm border border-surface-container-high">
+                  <span class="material-symbols-outlined text-tertiary text-[16px]">sync_alt</span>
+                  <span>Simulate Compliant Request (Auto-Release Held First)</span>
+                </button>
+              </div>
+
+              <!-- Terminal Output Box -->
+              <div id="hw-eval-result" class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs border border-surface-container-high/40">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-space-xs">
+                    <span id="hw-badge-status" class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-error"></span> REJECTED: POLICY VIOLATION
+                    </span>
+                    <span class="font-label-xs text-label-xs text-outline font-mono">ErrCode: E_HOLD_WAIT_PREVENT (0x44)</span>
+                  </div>
+                  <span class="font-label-xs text-label-xs text-outline font-mono">Evaluated in 0.04ms</span>
+                </div>
+                <div id="hw-eval-msg" class="font-label-xs text-label-xs font-mono bg-surface-container-low p-space-sm rounded text-on-surface leading-relaxed border border-surface-container-high/30">
+                  [KERNEL_TRAP] sys_resource_claim(PID=1042, Res=R0) INTERCEPTED.<br/>
+                  Invariant Failure: Process holds active resource lease.<br/>
+                  Protocol B mandates process state |Held(P)| == 0 before dispatching request.<br/>
+                  Action: Claim denied. Execution context paused without blocking queue mutation.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Circular-Wait Prevention (Resource Hierarchy) -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm bg-surface-container-low px-space-md py-space-sm rounded gap-space-sm">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-primary text-[20px]">account_tree</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Section 2: Circular-Wait Prevention (Resource Ordering Hierarchy)</span>
+                <span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Havender Condition 4 • Global Linear Ordering Function F: R → ℕ</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-space-sm">
+              <span class="font-label-xs text-label-xs uppercase tracking-wider font-semibold text-tertiary">Policy Active</span>
+              <button id="toggle-circular-wait" role="switch" aria-checked="true" class="relative inline-flex h-6 w-11 items-center rounded-full bg-tertiary transition-colors focus:outline-none">
+                <span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform"></span>
+              </button>
+            </div>
+          </div>
+
+          <p class="font-body-md text-body-md text-on-surface-variant">
+            Imposes a strict global linear ordering function <code class="font-mono text-primary font-semibold">F: R → ℕ</code> on all resource classes. A process may only request resource class <code class="font-mono font-semibold">R_k</code> if and only if <code class="font-mono font-semibold">F(R_k) > max { F(R_i) | P holds R_i }</code>. This guarantees the Resource Allocation Graph (RAG) remains a Directed Acyclic Graph (DAG), rendering circular wait conditions physically unreachable.
+          </p>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+            <!-- Ordering Table -->
+            <div class="lg:col-span-5 flex flex-col gap-space-sm">
+              <div class="flex items-center justify-between">
+                <span class="font-label-sm text-label-sm uppercase text-outline font-semibold">Configured Hierarchy (F: R → ℕ)</span>
+                <span class="font-label-xs text-label-xs text-primary font-mono">Total Order Set</span>
+              </div>
+              <div class="flex flex-col bg-surface rounded overflow-hidden shadow-sm border border-surface-container-high/50">
+                <div class="grid grid-cols-12 bg-surface-container text-on-surface font-label-xs text-label-xs uppercase px-space-md py-space-xs font-semibold">
+                  <span class="col-span-3">Order Rank</span>
+                  <span class="col-span-3">Resource ID</span>
+                  <span class="col-span-4">Hardware Class</span>
+                  <span class="col-span-2 text-right">Index F(r)</span>
+                </div>
+                <div id="prevention-order-table-body" class="flex flex-col divide-y divide-surface-container-high/40">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Hierarchy Verification Interactive Box -->
+            <div class="lg:col-span-7 flex flex-col gap-space-md bg-surface p-space-md rounded border border-surface-container-high/60">
+              <div class="flex items-center justify-between pb-space-xs">
+                <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                  <span class="material-symbols-outlined text-outline text-[16px]">calculate</span>
+                  Hierarchical Request Verifier
+                </span>
+                <span class="font-label-xs text-label-xs text-tertiary font-mono">Formal Check: F(Req) > F(Held_Max)</span>
+              </div>
+
+              <!-- Dynamic Inputs -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md p-space-md bg-surface-container-lowest rounded shadow-sm border border-surface-container-high/40">
+                <div class="flex flex-col gap-1">
+                  <span class="font-label-xs text-label-xs uppercase text-outline">Active Process Context</span>
+                  <select id="cw-process" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full border border-surface-container-high/50">
+                    <!-- Populated dynamically -->
+                  </select>
+                  <span id="cw-held-rank" class="font-label-xs text-label-xs text-outline font-mono">F(Held_Max) = 0</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <span class="font-label-xs text-label-xs uppercase text-outline">Attempted Syscall Target</span>
+                  <select id="cw-request" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full border border-surface-container-high/50">
+                    <!-- Populated dynamically -->
+                  </select>
+                  <span id="cw-req-rank" class="font-label-xs text-label-xs text-outline font-mono">F(Requested) = 1</span>
+                </div>
+              </div>
+
+              <button id="btn-eval-cw" type="button" class="h-8 px-space-md bg-primary text-on-primary font-label-sm text-label-sm rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors w-full sm:w-auto self-start">
+                <span class="material-symbols-outlined text-[16px]">verified</span>
+                <span>Execute Monotonic Ordering Verification</span>
+              </button>
+
+              <!-- Result Box -->
+              <div id="cw-result-box" class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs border border-surface-container-high/40">
+                <div class="flex items-center justify-between">
+                  <span id="cw-status-badge" class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-error"></span> REQUEST REJECTED (CYCLE PREVENTION)
+                  </span>
+                  <span class="font-label-xs text-label-xs text-outline font-mono">Formal Proof Invalidation</span>
+                </div>
+                <div class="p-space-sm bg-surface-container-low rounded font-mono text-label-xs text-on-surface flex flex-col gap-1 border border-surface-container-high/30">
+                  <div class="flex items-center gap-space-md">
+                    <span id="cw-math-statement" class="text-error font-semibold">F(Requested: R0) = 1 ≤ F(Held_Max: R2) = 3</span>
+                    <span class="text-outline">•</span>
+                    <span class="text-on-surface-variant font-sans text-[11px]">Condition 'strictly ascending' evaluated FALSE</span>
+                  </div>
+                  <div id="cw-rationale-text" class="text-on-surface-variant font-sans text-body-sm">
+                    Rationale: Violates hierarchical ordering rule. Requesting lower-ordered resource while holding higher-ordered resource could induce circular wait cycles across concurrent threads.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Interception Audit Log -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-sm border border-surface-container-high/60">
+          <div class="flex items-center justify-between pb-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">shield</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Prevention Pre-Queue Interceptions</span>
+                <span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Syscalls intercepted before scheduler dispatch</span>
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+              <thead>
+                <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                  <th class="py-space-xs px-space-md">Timestamp</th>
+                  <th class="py-space-xs px-space-md">Process ID</th>
+                  <th class="py-space-xs px-space-md">Attempted Op</th>
+                  <th class="py-space-xs px-space-md">Violated Havender Invariant</th>
+                  <th class="py-space-xs px-space-md">Syscall Decision</th>
+                  <th class="py-space-xs px-space-md">Mitigation Imposed</th>
+                </tr>
+              </thead>
+              <tbody id="prevention-audit-body" class="divide-y divide-surface-container-high/50 font-mono text-on-surface">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- 5. SCREEN: DETECTION                                                  -->
+      <!-- ===================================================================== -->
+      <section id="screen-detection" class="screen-view flex-col w-full py-space-md gap-space-lg">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Graph Reducibility</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono">Shoshani-Coffman Matrix Reduction O(m·n²)</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Deadlock Detection Engine</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Evaluates the system state vectors using the standard multiple-instance detection algorithm. If the graph cannot be reduced to empty, the unreduced processes form candidate set 𝒟.
+            </p>
+          </div>
+          <button id="btn-run-detection-scan" type="button" class="h-8 px-space-md bg-primary-container text-on-primary font-label-sm text-label-sm font-medium rounded hover:bg-primary flex items-center gap-1.5 transition-colors shadow-sm self-start md:self-auto">
+            <span class="material-symbols-outlined text-[16px]">troubleshoot</span>
+            <span>Execute Detection Scan</span>
+          </button>
+        </div>
+
+        <!-- Detection Status Card -->
+        <div id="detection-status-card" class="p-space-lg rounded bg-surface-container-lowest border-l-4 border-tertiary shadow-sm flex flex-col gap-space-sm border border-surface-container-high/60">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-space-sm">
+              <span id="detection-status-title" class="font-headline-md text-headline-md text-on-surface">System Matrix Completely Reducible</span>
+            </div>
+            <span id="detection-status-badge" class="px-space-xs py-0.5 rounded bg-tertiary-fixed-dim/20 text-tertiary font-label-xs text-label-xs font-semibold">SAFE STATE</span>
+          </div>
+          <p id="detection-status-desc" class="font-body-md text-body-md text-on-surface-variant">
+            A valid reduction sequence exists. All processes can successfully obtain their requested resources, finish execution, and return their held instances.
+          </p>
+          <div id="detection-candidate-list" class="pt-1">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Matrix Reduction Trace Table -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex items-center justify-between pb-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">reorder</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Step-by-Step Matrix Reduction Trace</span>
+                <span class="font-label-xs text-label-xs text-outline font-mono">Work Vector Transitions: Work ← Work + Allocation[i]</span>
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+              <thead>
+                <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                  <th class="py-space-xs px-space-md">Step</th>
+                  <th class="py-space-xs px-space-md">Process Chosen (Pᵢ)</th>
+                  <th class="py-space-xs px-space-md">Criterion: Request[i] ≤ Work</th>
+                  <th class="py-space-xs px-space-md">Reclaimed Allocation</th>
+                  <th class="py-space-xs px-space-md">Updated Work Vector</th>
+                  <th class="py-space-xs px-space-md">Reduction State</th>
+                </tr>
+              </thead>
+              <tbody id="detection-trace-body" class="divide-y divide-surface-container-high/40 text-on-surface">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Finish Vector State Table -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex items-center justify-between pb-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">checklist</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Final Finish Vector Inspection</span>
+                <span class="font-label-xs text-label-xs text-outline font-mono">Candidates with Finish[i] == FALSE are reported in Deadlock Set 𝒟</span>
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+              <thead>
+                <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                  <th class="py-space-xs px-space-md">Process ID</th>
+                  <th class="py-space-xs px-space-md">Name</th>
+                  <th class="py-space-xs px-space-md">Allocation Vector</th>
+                  <th class="py-space-xs px-space-md">Request Vector</th>
+                  <th class="py-space-xs px-space-md">Finish[i] Status</th>
+                </tr>
+              </thead>
+              <tbody id="detection-finish-vector-body" class="divide-y divide-surface-container-high/40 text-on-surface">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- 6. SCREEN: RECOVERY                                                   -->
+      <!-- ===================================================================== -->
+      <section id="screen-recovery" class="screen-view flex-col w-full py-space-md gap-space-lg">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Phase 5 Mitigation</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono">Victim Selection Heuristics & Lease Reclaim</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Deadlock Recovery & Mitigation</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Break circular wait cycles by selectively terminating victim processes from candidate set 𝒟 and reclaiming their held allocations. Supports manual selection or automated cost heuristics.
+            </p>
+          </div>
+        </div>
+
+        <!-- Recovery Status Banner -->
+        <div id="recovery-status-banner" class="p-space-lg rounded bg-tertiary-fixed-dim/20 border border-tertiary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+          <div class="flex flex-col gap-1">
+            <div id="recovery-banner-title" class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
+              <span class="font-headline-sm text-tertiary font-bold">No Deadlock Present (Recovery Not Needed)</span>
+            </div>
+            <span id="recovery-banner-desc" class="font-body-sm text-body-sm text-on-surface-variant">System is currently operating within safe invariants.</span>
+          </div>
+        </div>
+
+        <!-- Victim Selection Controls & Heuristic Strategies -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+          
+          <!-- Manual Termination Panel -->
+          <div class="lg:col-span-6 flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+            <div class="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                <span class="material-symbols-outlined text-primary text-[18px]">person_remove</span>
+                Manual Victim Termination
+              </span>
+              <span class="font-label-xs text-label-xs text-outline font-mono">Operator Override</span>
+            </div>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">
+              Select a specific deadlocked process to terminate. The kernel will reclaim its held resources, clear its outstanding requests, and re-run detection.
+            </p>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Select Victim Candidate</label>
+              <select id="select-manual-victim" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+            <button id="btn-manual-recover" type="button" class="h-8 px-space-md bg-error text-on-error font-label-sm text-label-sm rounded hover:bg-error/90 flex items-center justify-center gap-1 transition-colors self-start mt-1">
+              <span class="material-symbols-outlined text-[16px]">cancel</span>
+              <span>Terminate Selected Victim...</span>
+            </button>
+          </div>
+
+          <!-- Automated Heuristic Panel -->
+          <div class="lg:col-span-6 flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+            <div class="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+              <span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+                <span class="material-symbols-outlined text-primary text-[18px]">auto_fix_high</span>
+                Automated Heuristic Resolution
+              </span>
+              <span class="font-label-xs text-label-xs text-tertiary font-mono">Cost Minimization</span>
+            </div>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">
+              Iteratively selects and terminates the optimal victim based on cost heuristics until all circular waits in graph are fully resolved.
+            </p>
+            <div class="flex flex-col gap-1">
+              <label class="font-label-xs text-label-xs uppercase text-outline font-semibold">Heuristic Policy</label>
+              <select id="select-recovery-strategy" class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded border border-surface-container-high focus:outline-none focus:border-primary">
+                <option value="MIN_COST">Strategy 1: Minimum Termination Cost (Heuristic C)</option>
+                <option value="LOW_PRIO">Strategy 2: Lowest Priority First (Preserve High Prio)</option>
+                <option value="HIGH_ALLOC">Strategy 3: Highest Allocation First (Maximum Headroom)</option>
+              </select>
+            </div>
+            <button id="btn-auto-recover" type="button" class="h-8 px-space-md bg-primary-container text-on-primary font-label-sm text-label-sm rounded hover:bg-primary flex items-center justify-center gap-1 transition-colors self-start mt-1">
+              <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+              <span>Execute Automated Resolution</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Victim Candidates Ranking Table -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex items-center justify-between pb-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">grading</span>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">Candidate Set 𝒟 Heuristic Evaluation</span>
+                <span class="font-label-xs text-label-xs text-outline font-mono">Formula: C = BaseCost + (Priority × 8) - (HeldResources × 12)</span>
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+              <thead>
+                <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                  <th class="py-space-xs px-space-md">Candidate</th>
+                  <th class="py-space-xs px-space-md">Process Name</th>
+                  <th class="py-space-xs px-space-md">Priority</th>
+                  <th class="py-space-xs px-space-md">Held Allocation</th>
+                  <th class="py-space-xs px-space-md">Outstanding Req</th>
+                  <th class="py-space-xs px-space-md">Calculated Cost (C)</th>
+                  <th class="py-space-xs px-space-md text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="table-recovery-candidates-body" class="divide-y divide-surface-container-high/40 text-on-surface font-mono">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recovery Audit Log -->
+        <div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md border border-surface-container-high/60">
+          <div class="flex items-center justify-between pb-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="material-symbols-outlined text-outline text-[20px]">history_edu</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Recovery Execution History</span>
+            </div>
+          </div>
+          <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50">
+            <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+              <thead>
+                <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                  <th class="py-space-xs px-space-md">Timestamp</th>
+                  <th class="py-space-xs px-space-md">Terminated Victim</th>
+                  <th class="py-space-xs px-space-md">Strategy</th>
+                  <th class="py-space-xs px-space-md">Reclaimed Units</th>
+                  <th class="py-space-xs px-space-md">Outcome</th>
+                </tr>
+              </thead>
+              <tbody id="recovery-history-body" class="divide-y divide-surface-container-high/40 text-on-surface">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Phase 5 Preemption Architectural Callout -->
+        <div class="p-space-md rounded bg-surface-container-low flex flex-col gap-1 border border-surface-container-high/50">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[18px]">info</span>
+            <span class="font-label-xs text-label-xs uppercase text-primary font-bold">Operating Systems Architecture Note: Termination vs Preemption</span>
+          </div>
+          <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            In non-shareable hardware resources (e.g. dedicated spoolers, tape drives, physical mutexes), forced resource preemption without checkpointing leaves shared states corrupted. As established in Phase 5 specifications, process termination is the safer, standard primary recovery mechanism. Preemption requires rollbacks, transaction undo logs, and anti-starvation timestamp aging mechanisms.
+          </p>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- 7. SCREEN: EVENT LOG                                                  -->
+      <!-- ===================================================================== -->
+      <section id="screen-event-log" class="screen-view flex-col w-full py-space-md gap-space-lg">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-col gap-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Audit Stream</span>
+              <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono">Kernel Event Bus</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">System Audit & Telemetry Log</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+              Chronological audit log tracking process creations, claims, Havender invariant blocks, matrix reduction passes, and recovery termination events.
+            </p>
+          </div>
+          <div class="flex items-center gap-space-sm self-start md:self-auto">
+            <button id="btn-export-log" type="button" class="h-8 px-space-sm bg-surface-container-lowest text-on-surface font-label-xs text-label-xs rounded hover:bg-surface-container flex items-center gap-1 shadow-sm border border-surface-container-high">
+              <span class="material-symbols-outlined text-[16px]">download</span>
+              <span>Export Telemetry (.json)</span>
+            </button>
+            <button id="btn-clear-log" type="button" class="h-8 px-space-sm bg-surface-container-lowest text-error font-label-xs text-label-xs rounded hover:bg-error-container flex items-center gap-1 shadow-sm border border-surface-container-high">
+              <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+              <span>Clear Log</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters Bar -->
+        <div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-wrap items-center justify-between gap-space-md border border-surface-container-high/60">
+          <div class="flex flex-wrap items-center gap-space-md">
+            <!-- Category Filter -->
+            <div class="flex items-center gap-space-xs">
+              <span class="font-label-xs text-label-xs uppercase text-outline font-semibold">Category:</span>
+              <select id="log-category-filter" class="h-7 px-2 bg-surface-container-low text-on-surface font-label-xs text-label-xs rounded border border-surface-container-high focus:outline-none">
+                <option value="ALL">All Categories</option>
+                <option value="DETECTION">Detection</option>
+                <option value="RECOVERY">Recovery</option>
+                <option value="PREVENTION">Prevention</option>
+                <option value="ALLOCATION">Allocation</option>
+                <option value="PROCESS">Process</option>
+                <option value="RESOURCE">Resource</option>
+                <option value="SCENARIO">Scenario</option>
+                <option value="SYSTEM">System</option>
+              </select>
+            </div>
+
+            <!-- Severity Filter -->
+            <div class="flex items-center gap-space-xs">
+              <span class="font-label-xs text-label-xs uppercase text-outline font-semibold">Severity:</span>
+              <select id="log-severity-filter" class="h-7 px-2 bg-surface-container-low text-on-surface font-label-xs text-label-xs rounded border border-surface-container-high focus:outline-none">
+                <option value="ALL">All Severities</option>
+                <option value="INFO">Info</option>
+                <option value="SUCCESS">Success</option>
+                <option value="WARNING">Warning</option>
+                <option value="ERROR">Error</option>
+              </select>
+            </div>
+
+            <!-- Keyword Search -->
+            <div class="relative">
+              <input id="log-search-input" type="text" placeholder="Filter message or PID..." class="h-7 pl-7 pr-3 bg-surface-container-low text-on-surface font-sans text-body-sm rounded border border-surface-container-high focus:outline-none focus:border-primary w-52"/>
+              <span class="material-symbols-outlined absolute left-1.5 top-1.5 text-outline text-[16px]">search</span>
+            </div>
+          </div>
+
+          <span id="log-entries-count" class="font-mono text-label-xs text-outline font-semibold">0 events</span>
+        </div>
+
+        <!-- Event Log Table -->
+        <div class="overflow-x-auto rounded bg-surface border border-surface-container-high/50 bg-surface-container-lowest shadow-sm">
+          <table class="w-full text-left font-label-xs text-label-xs border-collapse">
+            <thead>
+              <tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+                <th class="py-space-xs px-space-md w-32">Timestamp</th>
+                <th class="py-space-xs px-space-md w-28">Category</th>
+                <th class="py-space-xs px-space-md w-24">Severity</th>
+                <th class="py-space-xs px-space-md">Event Log Payload / System Message</th>
+              </tr>
+            </thead>
+            <tbody id="table-event-log-body" class="divide-y divide-surface-container-high/40 text-on-surface">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: RECOVERY CONFIRMATION DIALOG                                       -->
+  <!-- ========================================================================= -->
+  <div id="modal-recovery-confirm" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div class="bg-surface-container-lowest rounded shadow-2xl max-w-md w-full border border-surface-container-high p-space-lg flex flex-col gap-space-md animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between pb-space-xs border-b border-surface-container-low">
+        <div class="flex items-center gap-space-xs text-error">
+          <span class="material-symbols-outlined text-[22px]">warning</span>
+          <span class="font-headline-sm text-headline-sm font-bold">Confirm Process Termination</span>
+        </div>
+        <button id="modal-btn-close" type="button" class="text-outline hover:text-on-surface">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-space-sm font-body-md text-on-surface">
+        <p>You are about to terminate the following process to break active deadlock cycles:</p>
+        <div class="p-space-sm bg-surface-container-low rounded border border-surface-container-high/40 font-mono text-label-xs">
+          <div>Target Victim: <strong id="modal-victim-id" class="text-error font-bold">P1</strong></div>
+          <div class="mt-1">Reclaimed Allocations: <span id="modal-reclaim-summary" class="text-tertiary font-bold">R0: 2, R2: 1</span></div>
+        </div>
+        <p class="text-body-sm text-outline">
+          All held resource allocations will immediately be returned to the Available vector, outstanding requests cleared, and process state marked TERMINATED.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-space-sm pt-space-xs border-t border-surface-container-low">
+        <button id="modal-btn-cancel" type="button" class="h-8 px-space-md bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded hover:bg-surface-container transition-colors">
+          Cancel
+        </button>
+        <button id="modal-btn-confirm" type="button" class="h-8 px-space-md bg-error text-on-error font-label-sm text-label-sm rounded hover:bg-error/90 font-semibold transition-colors flex items-center gap-1 shadow-sm">
+          <span class="material-symbols-outlined text-[16px]">delete_forever</span>
+          <span>Terminate Process</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- FLOATING TOAST NOTIFICATION CONTAINER                                     -->
+  <!-- ========================================================================= -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-space-xs pointer-events-none"></div>
+
+  <!-- ========================================================================= -->
+  <!-- SCRIPT LOAD ORDER (Architectural Separation - Phase 7 Live C++ Bridge)     -->
+  <!-- ========================================================================= -->
+  <script src="js/api_adapter.js"></script>
+  <script src="js/graph.js"></script>
+  <script src="js/screens/dashboard.js"></script>
+  <script src="js/screens/processes.js"></script>
+  <script src="js/screens/resources.js"></script>
+  <script src="js/screens/prevention.js"></script>
+  <script src="js/screens/detection.js"></script>
+  <script src="js/screens/recovery.js"></script>
+  <script src="js/screens/event_log.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+# ==============================================================================
+# Git Ignore - Operating Systems Deadlock Prevention & Recovery System
+# ==============================================================================
+
+# Build output directories
+build/
+bin/
+obj/
+out/
+
+# Compiled object files, static libraries, and executables
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+
+# CMake generated build files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# IDE and Editor configurations
+.vscode/
+.idea/
+*.cbp
+*.depend
+*.layout
+
+# Logs and runtime artifacts
+*.log
+scratch/
+.system_generated/
+
+# OS metadata
+.DS_Store
+Thumbs.db

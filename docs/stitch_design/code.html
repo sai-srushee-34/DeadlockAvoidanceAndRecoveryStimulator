@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"tertiary":"#006243","primary-fixed":"#dbe1ff","on-surface-variant":"#434655","surface-dim":"#cbdbf5","surface-container-lowest":"#ffffff","tertiary-fixed":"#85f8c4","on-surface":"#0b1c30","surface-container":"#e5eeff","background":"#f8f9ff","inverse-on-surface":"#eaf1ff","surface-container-high":"#dce9ff","on-secondary-container":"#5c647a","surface-bright":"#f8f9ff","surface-container-highest":"#d3e4fe","surface":"#f8f9ff","tertiary-container":"#007d57","inverse-primary":"#b4c5ff","primary-fixed-dim":"#b4c5ff","surface-variant":"#d3e4fe","on-primary":"#ffffff","error-container":"#ffdad6","outline-variant":"#c3c6d7","on-secondary-fixed-variant":"#3f465c","tertiary-fixed-dim":"#68dba9","on-tertiary-container":"#bdffdc","secondary":"#565e74","on-error":"#ffffff","on-tertiary":"#ffffff","surface-container-low":"#eff4ff","on-primary-container":"#eeefff","primary":"#004ac6","on-secondary-fixed":"#131b2e","on-tertiary-fixed-variant":"#005137","secondary-fixed":"#dae2fd","inverse-surface":"#213145","on-tertiary-fixed":"#002114","on-secondary":"#ffffff","on-error-container":"#93000a","secondary-container":"#dae2fd","on-primary-fixed-variant":"#003ea8","outline":"#737686","on-primary-fixed":"#00174b","primary-container":"#2563eb","on-background":"#0b1c30","surface-tint":"#0053db","secondary-fixed-dim":"#bec6e0","error":"#ba1a1a"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"space-xl":"1.5rem","space-sm":"0.375rem","space-md":"0.75rem","space-xs":"0.25rem","gutter":"0.75rem","gutter-desktop":"1rem","margin-desktop":"1.5rem","margin":"1rem","space-lg":"1rem"},fontFamily:{"headline-sm":["Geist"],"headline-md":["Geist"],"label-md":["JetBrains Mono"],"body-sm":["Geist"],"label-xs":["JetBrains Mono"],"body-md":["Geist"],"label-sm":["JetBrains Mono"],"headline-lg":["Geist"]},fontSize:{"headline-sm":["15px",{"lineHeight":"20px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["18px",{"lineHeight":"24px","letterSpacing":"-0.015em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"-0.01em","fontWeight":"500"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-xs":["10px",{"lineHeight":"12px","letterSpacing":"0.02em","fontWeight":"400"}],"body-md":["13px",{"lineHeight":"18px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0em","fontWeight":"500"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.02em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[230px] bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-[52px] px-space-md flex items-center gap-space-sm bg-surface-container-low"><span class="material-symbols-outlined text-primary text-[20px]">memory</span><div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm uppercase font-semibold text-on-surface tracking-wider truncate">Deadlock Simulator</span><span class="font-label-xs text-label-xs text-outline truncate">OS Kernel Subsystem v2.4</span></div></div><div class="px-space-xs py-space-sm"><nav class="flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-semibold"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[18px]">grid_view</span><span>Dashboard</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-path="processes" href="#"><span class="material-symbols-outlined text-[18px]">terminal</span><span>Processes</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-path="resources" href="#"><span class="material-symbols-outlined text-[18px]">dns</span><span>Resources</span></a><a aria-current="page" class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-colors bg-surface-container text-primary font-semibold" data-path="prevention" href="#"><span class="material-symbols-outlined text-[18px]">verified_user</span><span>Prevention</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-path="detection" href="#"><span class="material-symbols-outlined text-[18px]">troubleshoot</span><span>Detection</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-path="recovery" href="#"><span class="material-symbols-outlined text-[18px]">restart_alt</span><span>Recovery</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant font-body-sm text-body-sm hover:bg-surface-container hover:text-on-surface transition-colors" data-path="event-log" href="#"><span class="material-symbols-outlined text-[18px]">receipt_long</span><span>Event Log</span></a></nav></div></div><div class="p-space-md m-space-sm bg-surface-container-low rounded flex flex-col gap-space-xs"><div class="flex items-center justify-between"><span class="font-label-xs text-label-xs text-outline uppercase">Engine</span><span class="font-label-xs text-label-xs font-semibold text-tertiary">Bankers & RAG</span></div><div class="flex items-center justify-between"><span class="font-label-xs text-label-xs text-outline uppercase">Tick</span><span class="font-label-xs text-label-xs text-on-surface font-semibold">104ms</span></div><div class="flex items-center justify-between"><span class="font-label-xs text-label-xs text-outline uppercase">Mode</span><span class="font-label-xs text-label-xs text-on-surface font-semibold">Interactive</span></div></div></aside><div class="pl-[230px]"><header class="fixed top-0 left-[230px] right-0 h-[52px] bg-surface-container-lowest/90 backdrop-blur-md z-40 px-space-lg flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined text-outline text-[18px]">terminal</span><div class="flex items-center gap-space-xs font-label-sm text-label-sm truncate"><span class="text-outline">Kernel</span><span class="text-outline">/</span><span class="text-on-surface font-semibold">System Overview</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-0.5 rounded bg-tertiary-fixed-dim/20 text-tertiary font-label-xs text-label-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span><span>SAFE STATE</span></div><div class="relative"><select class="h-7 pl-space-sm pr-space-lg bg-surface-container-low text-on-surface font-label-xs text-label-xs rounded appearance-none cursor-pointer focus:outline-none focus:bg-surface-container"><option>Standard Safe State (3P, 3R)</option><option>Dining Philosophers Deadlock (5P)</option><option>Circular Wait Conflict (4P)</option><option>Hold & Wait Resource Starvation</option></select><span class="material-symbols-outlined absolute right-1 top-1.5 pointer-events-none text-outline text-[14px]">expand_more</span></div><button class="h-7 px-space-sm flex items-center gap-space-xs rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">refresh</span><span>Reset State</span></button><button class="h-7 px-space-md flex items-center gap-space-xs rounded bg-primary-container text-on-primary font-body-sm text-body-sm font-medium hover:bg-primary transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">search</span><span>Run Detection</span></button></div></header><main class="relative pt-[52px] min-h-screen bg-background w-full px-gutter-desktop"><div class="flex flex-col w-full py-space-md gap-space-lg">
+<!-- Subsystem Banner & Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm bg-surface-container-lowest p-space-lg rounded shadow-sm">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">Invariant Enforcement</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest">Havender Formal Model 1968</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Deadlock Prevention Policies</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+        Enforce structural constraints to strictly invalidate Coffman conditions prior to resource dispatch. Unlike dynamic Avoidance (Banker's Algorithm), Prevention statically negates Hold-and-Wait or Circular-Wait invariants so deadlocks are mathematically impossible.
+      </p>
+</div>
+<!-- Prevention Mode Telemetry Pill -->
+<div class="flex items-center gap-space-md shrink-0 bg-surface-container-low px-space-md py-space-sm rounded">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs uppercase text-outline">Interception Engine</span>
+<span class="font-label-sm text-label-sm font-semibold text-tertiary flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span> ACTIVE (ZERO-WAIT)
+        </span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs uppercase text-outline">Rejected Pre-Flight</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">1,482 Reqs</span>
+</div>
+</div>
+</div>
+<!-- Comparison Callout: Prevention vs Avoidance -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-space-md">
+<div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-xs text-label-xs uppercase">Coffman #1</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-semibold">Mutual Exclusion</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Unavoidable</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Non-shareable hardware resources (e.g. dedicated spoolers, tape drives).</span>
+</div>
+<div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 ring-1 ring-primary/20">
+<div class="flex items-center justify-between text-primary">
+<span class="font-label-xs text-label-xs uppercase font-semibold">Coffman #2</span>
+<span class="font-label-xs text-label-xs font-semibold">Hold & Wait</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">verified</span> Negated (Sec. 1)
+      </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Conservative simultaneous grant or total pre-relinquishment rule.</span>
+</div>
+<div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-xs text-label-xs uppercase">Coffman #3</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-semibold">No Preemption</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Costly Fallback</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Forces forced state save/restore on contested hardware locks.</span>
+</div>
+<div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-1 ring-1 ring-primary/20">
+<div class="flex items-center justify-between text-primary">
+<span class="font-label-xs text-label-xs uppercase font-semibold">Coffman #4</span>
+<span class="font-label-xs text-label-xs font-semibold">Circular Wait</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">verified</span> Negated (Sec. 2)
+      </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Strict monotonic ordering F: R → N preventing directed graph loops.</span>
+</div>
+</div>
+<!-- SECTION 1: Hold-and-Wait Prevention -->
+<div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md">
+<!-- Header with Toggle -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm bg-surface-container-low px-space-md py-space-sm rounded gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">lock_reset</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Section 1: Hold-and-Wait Prevention (Havender Condition 1 & 2)</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Rule: ∀P, Request(P, R_k) valid ⇔ Holds(P) = ∅ ∨ InitialAllocationPhase(P)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-xs text-label-xs uppercase tracking-wider font-semibold text-tertiary">Policy Active</span>
+<button aria-checked="true" class="relative inline-flex h-6 w-11 items-center rounded-full bg-tertiary transition-colors focus:outline-none" id="toggle-hold-wait" role="switch">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform"></span>
+</button>
+</div>
+</div>
+<!-- Protocol Selector Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm uppercase text-outline font-semibold">Mechanism Selection</label>
+<div class="flex flex-col gap-space-sm">
+<!-- Protocol A -->
+<label class="flex items-start gap-space-sm p-space-md rounded bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors">
+<input class="mt-1 text-primary focus:ring-0" name="hw_protocol" type="radio" value="A"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Protocol A: Strict Conservative (All-at-Once)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Process must request and be atomically granted <em>all</em> prospective resources prior to thread initiation. Execution blocked until complete set satisfies.</span>
+<span class="font-label-xs text-label-xs text-outline mt-1 font-mono">Metric: Low resource utilization; Zero mid-cycle starvation.</span>
+</div>
+</label>
+<!-- Protocol B (Default) -->
+<label class="flex items-start gap-space-sm p-space-md rounded bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors ring-1 ring-primary/30">
+<input checked="" class="mt-1 text-primary focus:ring-0" name="hw_protocol" type="radio" value="B"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Protocol B: Release All Before New Request</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">A process may request incremental locks dynamically, but ONLY when it currently holds 0 allocations. All existing resources must be relinquished prior to issuing new demands.</span>
+<span class="font-label-xs text-label-xs text-tertiary mt-1 font-mono">Current Active System Standard • High throughput</span>
+</div>
+</label>
+</div>
+</div>
+<div class="p-space-md rounded bg-surface-container-high/40 flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase text-outline font-semibold">Formal Policy Axiom</span>
+<p class="font-label-xs text-label-xs text-on-surface font-mono">
+            “If process P holds any resource R<sub>i</sub>, a request for R<sub>k</sub> is immediately rejected at the syscall interface unless all held resources are voluntarily relinquished first.”
+          </p>
+</div>
+</div>
+<!-- Sandbox Interactive Tester -->
+<div class="lg:col-span-7 flex flex-col gap-space-md bg-surface p-space-md rounded">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-outline text-[16px]">science</span>
+            Interactive Request Evaluation Sandbox
+          </span>
+<span class="font-label-xs text-label-xs text-outline font-mono">Kernel Trap Simulator</span>
+</div>
+<!-- Simulated Context State -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md p-space-md bg-surface-container-lowest rounded shadow-sm">
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase text-outline">Target Process</span>
+<div class="flex items-center gap-space-sm">
+<select class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full" id="hw-target-process">
+<option selected="" value="P1">P1 (PID: 1042) • Holds [R1: Magnetic Tape]</option>
+<option value="P2">P2 (PID: 1043) • Holds [None ∅]</option>
+<option value="P3">P3 (PID: 1044) • Holds [R2: NVMe Disk]</option>
+</select>
+</div>
+<span class="font-label-xs text-label-xs text-outline" id="hw-held-desc">Currently holding: <strong class="text-on-surface">R1 (1 instance)</strong></span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase text-outline">Desired Additional Resource</span>
+<div class="flex items-center gap-space-sm">
+<select class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full" id="hw-target-resource">
+<option selected="" value="R0">R0 (CPU Core Lock • Order 1)</option>
+<option value="R1">R1 (Magnetic Tape • Order 2)</option>
+<option value="R2">R2 (NVMe Disk • Order 3)</option>
+<option value="R3">R3 (Line Printer • Order 4)</option>
+</select>
+</div>
+<span class="font-label-xs text-label-xs text-outline">Simulated Syscall: <code class="font-mono text-primary">sys_resource_claim()</code></span>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="h-8 px-space-md bg-primary text-on-primary font-label-sm text-label-sm rounded hover:bg-primary/90 flex items-center gap-1 transition-colors" id="btn-eval-hw" type="button">
+<span class="material-symbols-outlined text-[16px]">gavel</span>
+            Dispatch Raw Claim Syscall
+          </button>
+<button class="h-8 px-space-md bg-surface-container-lowest text-on-surface font-label-sm text-label-sm rounded hover:bg-surface-container flex items-center gap-1 transition-colors shadow-sm" id="btn-auto-release-hw" type="button">
+<span class="material-symbols-outlined text-tertiary text-[16px]">sync_alt</span>
+            Simulate Compliant Request (Auto-Release Held First)
+          </button>
+</div>
+<!-- Evaluation Terminal Output Box -->
+<div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs transition-all" id="hw-eval-result">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold flex items-center gap-1" id="hw-badge-status">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> REJECTED: POLICY VIOLATION
+              </span>
+<span class="font-label-xs text-label-xs text-outline font-mono">ErrCode: E_HOLD_WAIT_PREVENT (0x44)</span>
+</div>
+<span class="font-label-xs text-label-xs text-outline">Evaluated in 0.04ms</span>
+</div>
+<div class="font-label-xs text-label-xs font-mono bg-surface-container-low p-space-sm rounded text-on-surface leading-relaxed" id="hw-eval-msg">
+            [KERNEL_TRAP] sys_resource_claim(PID=1042, Res=R0) INTERCEPTED.<br/>
+            Invariant Failure: Process P1 currently retains active lease on R1.<br/>
+            Protocol B mandates process state |Held(P1)| == 0 before dispatching request for R0.<br/>
+            Action: Claim denied. Execution context paused without blocking queue mutation.
+          </div>
+<div class="flex items-center gap-space-sm text-outline font-label-xs text-label-xs pt-space-xs">
+<span class="material-symbols-outlined text-[14px]">info</span>
+<span>Eliminates hold-and-wait condition by forcing atomic multi-step rollback or atomic start.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Circular-Wait Prevention (Resource Hierarchy) -->
+<div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-md">
+<!-- Header with Toggle -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm bg-surface-container-low px-space-md py-space-sm rounded gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">account_tree</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Section 2: Circular-Wait Prevention (Resource Ordering Hierarchy)</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Havender Condition 4 • Global Linear Ordering Function F: R → ℕ</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-xs text-label-xs uppercase tracking-wider font-semibold text-tertiary">Policy Active</span>
+<button aria-checked="true" class="relative inline-flex h-6 w-11 items-center rounded-full bg-tertiary transition-colors focus:outline-none" id="toggle-circular-wait" role="switch">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform"></span>
+</button>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+      Imposes a strict global linear ordering function <code class="font-mono text-primary font-semibold">F: R → ℕ</code> on all resource classes. A process may only request resource class <code class="font-mono font-semibold">R_k</code> if and only if <code class="font-mono font-semibold">F(R_k) > max { F(R_i) | P holds R_i }</code>. This guarantees the Resource Allocation Graph (RAG) remains a Directed Acyclic Graph (DAG), rendering circular wait conditions physically unreachable.
+    </p>
+<!-- Ordering Definition & Simulation Sandbox Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Linear Ordering Table & Customizer -->
+<div class="lg:col-span-5 flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase text-outline font-semibold">Configured Hierarchy (F: R → ℕ)</span>
+<span class="font-label-xs text-label-xs text-primary font-mono">Total Order Set</span>
+</div>
+<div class="flex flex-col bg-surface rounded overflow-hidden shadow-sm">
+<!-- Table Header -->
+<div class="grid grid-cols-12 bg-surface-container text-on-surface font-label-xs text-label-xs uppercase px-space-md py-space-xs font-semibold">
+<span class="col-span-3">Order Rank</span>
+<span class="col-span-3">Resource ID</span>
+<span class="col-span-4">Hardware Class</span>
+<span class="col-span-2 text-right">Index F(r)</span>
+</div>
+<!-- Rows -->
+<div class="flex flex-col divide-y divide-surface-container-high/40">
+<!-- R0 -->
+<div class="grid grid-cols-12 items-center px-space-md py-space-sm text-on-surface hover:bg-surface-container-lowest transition-colors">
+<span class="col-span-3 flex items-center gap-1 font-label-sm text-label-sm text-outline">
+<span class="material-symbols-outlined text-[14px]">south</span> 1 (Lowest)
+              </span>
+<span class="col-span-3 font-mono font-semibold text-primary">R0</span>
+<span class="col-span-4 font-body-sm text-body-sm truncate">CPU Cores</span>
+<span class="col-span-2 text-right font-mono font-semibold bg-surface-container-high px-1.5 py-0.5 rounded text-label-xs">1</span>
+</div>
+<!-- R1 -->
+<div class="grid grid-cols-12 items-center px-space-md py-space-sm text-on-surface hover:bg-surface-container-lowest transition-colors">
+<span class="col-span-3 flex items-center gap-1 font-label-sm text-label-sm text-outline">
+<span class="material-symbols-outlined text-[14px]">unfold_more</span> 2
+              </span>
+<span class="col-span-3 font-mono font-semibold text-primary">R1</span>
+<span class="col-span-4 font-body-sm text-body-sm truncate">Magnetic Tape</span>
+<span class="col-span-2 text-right font-mono font-semibold bg-surface-container-high px-1.5 py-0.5 rounded text-label-xs">2</span>
+</div>
+<!-- R2 -->
+<div class="grid grid-cols-12 items-center px-space-md py-space-sm text-on-surface hover:bg-surface-container-lowest transition-colors">
+<span class="col-span-3 flex items-center gap-1 font-label-sm text-label-sm text-outline">
+<span class="material-symbols-outlined text-[14px]">unfold_more</span> 3
+              </span>
+<span class="col-span-3 font-mono font-semibold text-primary">R2</span>
+<span class="col-span-4 font-body-sm text-body-sm truncate">NVMe Disk</span>
+<span class="col-span-2 text-right font-mono font-semibold bg-surface-container-high px-1.5 py-0.5 rounded text-label-xs">3</span>
+</div>
+<!-- R3 -->
+<div class="grid grid-cols-12 items-center px-space-md py-space-sm text-on-surface hover:bg-surface-container-lowest transition-colors">
+<span class="col-span-3 flex items-center gap-1 font-label-sm text-label-sm text-outline">
+<span class="material-symbols-outlined text-[14px]">north</span> 4 (Highest)
+              </span>
+<span class="col-span-3 font-mono font-semibold text-primary">R3</span>
+<span class="col-span-4 font-body-sm text-body-sm truncate">Line Printer</span>
+<span class="col-span-2 text-right font-mono font-semibold bg-surface-container-high px-1.5 py-0.5 rounded text-label-xs">4</span>
+</div>
+</div>
+</div>
+<div class="p-space-sm rounded bg-surface-container-low flex items-center justify-between">
+<span class="font-label-xs text-label-xs text-outline">Reorder mode locked in Kernel Config</span>
+<button class="h-6 px-space-sm bg-surface-container-lowest text-on-surface font-label-xs text-label-xs rounded hover:bg-surface-container shadow-sm flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[14px]">tune</span> Adjust Linear Function
+          </button>
+</div>
+</div>
+<!-- Hierarchy Verification Interactive Box -->
+<div class="lg:col-span-7 flex flex-col gap-space-md bg-surface p-space-md rounded">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-outline text-[16px]">calculate</span>
+            Hierarchical Request Verifier
+          </span>
+<span class="font-label-xs text-label-xs text-tertiary font-mono">Formal Check: F(Req) > F(Held_Max)</span>
+</div>
+<!-- Dynamic Inputs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md p-space-md bg-surface-container-lowest rounded shadow-sm">
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase text-outline">Active Process Context</span>
+<select class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full" id="cw-process">
+<option selected="" value="P2_R2">P2 • Highest Held: R2 (Rank 3: NVMe)</option>
+<option value="P1_R1">P1 • Highest Held: R1 (Rank 2: Mag Tape)</option>
+<option value="P4_R0">P4 • Highest Held: R0 (Rank 1: CPU Core)</option>
+<option value="P3_NONE">P3 • Highest Held: None (Rank 0)</option>
+</select>
+<span class="font-label-xs text-label-xs text-outline font-mono" id="cw-held-rank">F(Held_Max) = 3</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase text-outline">Attempted Syscall Target</span>
+<select class="h-8 px-space-sm bg-surface-container-low text-on-surface font-label-sm text-label-sm rounded focus:outline-none w-full" id="cw-request">
+<option selected="" value="R1_2">Request R1 (Rank 2: Magnetic Tape)</option>
+<option value="R0_1">Request R0 (Rank 1: CPU Core)</option>
+<option value="R2_3">Request R2 (Rank 3: NVMe Disk)</option>
+<option value="R3_4">Request R3 (Rank 4: Line Printer)</option>
+</select>
+<span class="font-label-xs text-label-xs text-outline font-mono" id="cw-req-rank">F(Requested) = 2</span>
+</div>
+</div>
+<button class="h-8 px-space-md bg-primary text-on-primary font-label-sm text-label-sm rounded hover:bg-primary/90 flex items-center justify-center gap-1 transition-colors w-full sm:w-auto self-start" id="btn-eval-cw" type="button">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+          Execute Monotonic Ordering Verification
+        </button>
+<!-- Result Box -->
+<div class="p-space-md rounded bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs" id="cw-result-box">
+<div class="flex items-center justify-between">
+<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold flex items-center gap-1" id="cw-status-badge">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> REQUEST REJECTED (CYCLE PREVENTION)
+            </span>
+<span class="font-label-xs text-label-xs text-outline font-mono">Formal Proof Invalidation</span>
+</div>
+<!-- Formal Verification Block -->
+<div class="p-space-sm bg-surface-container-low rounded font-mono text-label-xs text-on-surface flex flex-col gap-1">
+<div class="flex items-center gap-space-md">
+<span class="text-error font-semibold" id="cw-math-statement">F(Requested: R1) = 2 ≤ F(Held_Max: R2) = 3</span>
+<span class="text-outline">•</span>
+<span class="text-on-surface-variant">Condition 'strictly ascending' evaluated FALSE</span>
+</div>
+<div class="text-on-surface-variant" id="cw-rationale-text">
+              Rationale: Violates hierarchical ordering rule. Requesting lower-ordered resource while holding higher-ordered resource could induce circular wait cycles across concurrent threads.
+            </div>
+</div>
+<div class="flex items-center justify-between text-outline font-label-xs text-label-xs pt-space-xs">
+<span>Remedy: P2 must release R2 before issuing claim on R1, or request all lower ranks beforehand.</span>
+<span class="font-mono text-tertiary">Invariant F holds invariant acyclicity</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: Interception Audit Log -->
+<div class="flex flex-col bg-surface-container-lowest rounded shadow-sm p-space-lg gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[20px]">shield</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Prevention Pre-Queue Interceptions</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Events intercepted BEFORE scheduler dispatch queue</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="h-7 px-space-sm bg-surface-container-low text-on-surface font-label-xs text-label-xs rounded hover:bg-surface-container flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[14px]">download</span> Export Telemetry (.trace)
+        </button>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto rounded bg-surface">
+<table class="w-full text-left font-label-xs text-label-xs border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface font-semibold uppercase tracking-wider">
+<th class="py-space-xs px-space-md">Timestamp</th>
+<th class="py-space-xs px-space-md">Process ID</th>
+<th class="py-space-xs px-space-md">Attempted Op</th>
+<th class="py-space-xs px-space-md">Violated Havender Invariant</th>
+<th class="py-space-xs px-space-md">Syscall Decision</th>
+<th class="py-space-xs px-space-md">Mitigation Imposed</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/50 font-mono text-on-surface">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="py-space-sm px-space-md text-outline">14:02:19.408</td>
+<td class="py-space-sm px-space-md font-semibold text-primary">PID 1088 (P3)</td>
+<td class="py-space-sm px-space-md"><code class="text-on-surface">CLAIM(R0) while holds [R2]</code></td>
+<td class="py-space-sm px-space-md text-error">Circular-Wait: F(R0)=1 ≤ F(R2)=3</td>
+<td class="py-space-sm px-space-md">
+<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-semibold">BLOCK_IMMEDIATE</span>
+</td>
+<td class="py-space-sm px-space-md text-on-surface-variant">Thread trap raised; Context preserved without lock</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="py-space-sm px-space-md text-outline">14:02:18.992</td>
+<td class="py-space-sm px-space-md font-semibold text-primary">PID 1042 (P1)</td>
+<td class="py-space-sm px-space-md"><code class="text-on-surface">CLAIM(R2) with active [R1]</code></td>
+<td class="py-space-sm px-space-md text-secondary">Hold-and-Wait: Protocol B Non-Zero Held</td>
+<td class="py-space-sm px-space-md">
+<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-semibold">REJECT_PREEMPT</span>
+</td>
+<td class="py-space-sm px-space-md text-on-surface-variant">Client re-invoked with auto-relinquish flag</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="py-space-sm px-space-md text-outline">14:02:17.114</td>
+<td class="py-space-sm px-space-md font-semibold text-primary">PID 1102 (P7)</td>
+<td class="py-space-sm px-space-md"><code class="text-on-surface">CLAIM(R0) while holds [R3]</code></td>
+<td class="py-space-sm px-space-md text-error">Circular-Wait: F(R0)=1 ≤ F(R3)=4</td>
+<td class="py-space-sm px-space-md">
+<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-semibold">BLOCK_IMMEDIATE</span>
+</td>
+<td class="py-space-sm px-space-md text-on-surface-variant">Signal SIGDEADLK delivered to user thread</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<script>
+  (function initPreventionEngine() {
+    // Hold & Wait Interactive Controls
+    const hwProcess = document.getElementById('hw-target-process');
+    const hwResource = document.getElementById('hw-target-resource');
+    const hwDesc = document.getElementById('hw-held-desc');
+    const btnEvalHw = document.getElementById('btn-eval-hw');
+    const btnAutoRelHw = document.getElementById('btn-auto-release-hw');
+    const hwBadge = document.getElementById('hw-badge-status');
+    const hwMsg = document.getElementById('hw-eval-msg');
+
+    const hwStateMap = {
+      P1: { held: 'R1', text: 'R1 (Magnetic Tape, 1 instance)', count: 1 },
+      P2: { held: null, text: 'None [Empty Set ∅]', count: 0 },
+      P3: { held: 'R2', text: 'R2 (NVMe Disk, 1 instance)', count: 1 }
+    };
+
+    if (hwProcess && hwDesc) {
+      hwProcess.addEventListener('change', () => {
+        const cur = hwStateMap[hwProcess.value];
+        hwDesc.innerHTML = `Currently holding: <strong class="text-on-surface">${cur.text}</strong>`;
+      });
+    }
+
+    if (btnEvalHw) {
+      btnEvalHw.addEventListener('click', () => {
+        const proc = hwProcess.value;
+        const res = hwResource.value;
+        const state = hwStateMap[proc];
+
+        if (state.count > 0) {
+          hwBadge.className = 'px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold flex items-center gap-1';
+          hwBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-error"></span> REJECTED: POLICY VIOLATION';
+          hwMsg.innerHTML = `[KERNEL_TRAP] sys_resource_claim(PID=${proc}, Res=${res}) REJECTED.<br>` +
+            `Hold-and-Wait Violation: Process holds ${state.held}. Protocol B mandates 0 allocations prior to issuing new claims.<br>` +
+            `Interception: Prevented possible resource hoarding starvation.`;
+        } else {
+          hwBadge.className = 'px-space-xs py-0.5 rounded bg-tertiary-fixed-dim/20 text-tertiary font-label-xs text-label-xs font-semibold flex items-center gap-1';
+          hwBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> PERMITTED: COMPLIANT WITH PROTOCOL B';
+          hwMsg.innerHTML = `[KERNEL_OK] sys_resource_claim(PID=${proc}, Res=${res}) APPROVED.<br>` +
+            `Hold check verified: Process currently holds 0 allocations.<br>` +
+            `Invariant satisfied: Transition allowed to allocation scheduler.`;
+        }
+      });
+    }
+
+    if (btnAutoRelHw) {
+      btnAutoRelHw.addEventListener('click', () => {
+        const proc = hwProcess.value;
+        const res = hwResource.value;
+        hwBadge.className = 'px-space-xs py-0.5 rounded bg-tertiary-fixed-dim/20 text-tertiary font-label-xs text-label-xs font-semibold flex items-center gap-1';
+        hwBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> PERMITTED VIA AUTO-RELEASE';
+        hwMsg.innerHTML = `[KERNEL_STEP] Relinquish sequence triggered for ${proc}:<br>` +
+          `1. Discharged lease on ${hwStateMap[proc].held || 'existing'}<br>` +
+          `2. Atomic verification: |Held(${proc})| == 0<br>` +
+          `3. Approved claim request for target ${res}. Hold-and-wait condition invalidated.`;
+      });
+    }
+
+    // Circular Wait Hierarchy Controls
+    const cwProc = document.getElementById('cw-process');
+    const cwReq = document.getElementById('cw-request');
+    const cwHeldRank = document.getElementById('cw-held-rank');
+    const cwReqRank = document.getElementById('cw-req-rank');
+    const btnEvalCw = document.getElementById('btn-eval-cw');
+    const cwStatusBadge = document.getElementById('cw-status-badge');
+    const cwMath = document.getElementById('cw-math-statement');
+    const cwRationale = document.getElementById('cw-rationale-text');
+
+    const procRanks = {
+      P2_R2: 3,
+      P1_R1: 2,
+      P4_R0: 1,
+      P3_NONE: 0
+    };
+
+    const reqRanks = {
+      R1_2: { name: 'R1', rank: 2 },
+      R0_1: { name: 'R0', rank: 1 },
+      R2_3: { name: 'R2', rank: 3 },
+      R3_4: { name: 'R3', rank: 4 }
+    };
+
+    function updateCwLabels() {
+      const hRank = procRanks[cwProc.value];
+      const rObj = reqRanks[cwReq.value];
+      cwHeldRank.textContent = `F(Held_Max) = ${hRank}`;
+      cwReqRank.textContent = `F(Requested: ${rObj.name}) = ${rObj.rank}`;
+    }
+
+    if (cwProc && cwReq) {
+      cwProc.addEventListener('change', updateCwLabels);
+      cwReq.addEventListener('change', updateCwLabels);
+    }
+
+    if (btnEvalCw) {
+      btnEvalCw.addEventListener('click', () => {
+        const hRank = procRanks[cwProc.value];
+        const rObj = reqRanks[cwReq.value];
+
+        if (rObj.rank > hRank) {
+          // Valid
+          cwStatusBadge.className = 'px-space-xs py-0.5 rounded bg-tertiary-fixed-dim/20 text-tertiary font-label-xs text-label-xs font-semibold flex items-center gap-1';
+          cwStatusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> REQUEST GRANTED (HIERARCHY PRESERVED)';
+          cwMath.className = 'text-tertiary font-semibold';
+          cwMath.textContent = `F(Requested: ${rObj.name}) = ${rObj.rank} > F(Held_Max) = ${hRank}`;
+          cwRationale.textContent = `Strictly ascending order verified. Because each subsequent request must possess a higher index, closed cyclic dependency graphs cannot form.`;
+        } else {
+          // Rejected
+          cwStatusBadge.className = 'px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold flex items-center gap-1';
+          cwStatusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-error"></span> REQUEST REJECTED (CYCLE PREVENTION)';
+          cwMath.className = 'text-error font-semibold';
+          cwMath.textContent = `F(Requested: ${rObj.name}) = ${rObj.rank} ≤ F(Held_Max) = ${hRank}`;
+          cwRationale.textContent = `Violates hierarchical ordering rule. Requesting lower-ordered resource while holding higher-ordered resource could induce circular wait cycles across concurrent threads.`;
+        }
+      });
+    }
+
+    // Toggle switch simulation
+    const hwToggle = document.getElementById('toggle-hold-wait');
+    if (hwToggle) {
+      hwToggle.addEventListener('click', () => {
+        const isChecked = hwToggle.getAttribute('aria-checked') === 'true';
+        hwToggle.setAttribute('aria-checked', !isChecked);
+        const thumb = hwToggle.querySelector('span');
+        if (isChecked) {
+          hwToggle.className = 'relative inline-flex h-6 w-11 items-center rounded-full bg-outline transition-colors focus:outline-none';
+          thumb.className = 'translate-x-1 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform';
+        } else {
+          hwToggle.className = 'relative inline-flex h-6 w-11 items-center rounded-full bg-tertiary transition-colors focus:outline-none';
+          thumb.className = 'translate-x-6 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform';
+        }
+      });
+    }
+
+    const cwToggle = document.getElementById('toggle-circular-wait');
+    if (cwToggle) {
+      cwToggle.addEventListener('click', () => {
+        const isChecked = cwToggle.getAttribute('aria-checked') === 'true';
+        cwToggle.setAttribute('aria-checked', !isChecked);
+        const thumb = cwToggle.querySelector('span');
+        if (isChecked) {
+          cwToggle.className = 'relative inline-flex h-6 w-11 items-center rounded-full bg-outline transition-colors focus:outline-none';
+          thumb.className = 'translate-x-1 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform';
+        } else {
+          cwToggle.className = 'relative inline-flex h-6 w-11 items-center rounded-full bg-tertiary transition-colors focus:outline-none';
+          thumb.className = 'translate-x-6 inline-block h-4 w-4 transform rounded-full bg-surface-container-lowest transition-transform';
+        }
+      });
+    }
+  })();
+</script></main></div></body></html>

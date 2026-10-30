@@ -1,0 +1,220 @@
+/* ==========================================================================
+   Kernel Systems Deadlock Monitor - Core Stylesheet
+   Design Philosophy: Technical Minimalist / Precision Engineering
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+:root {
+  --color-primary: #004ac6;
+  --color-primary-container: #2563eb;
+  --color-surface: #f8f9ff;
+  --color-surface-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-highest: #d3e4fe;
+  --color-surface-card: #ffffff;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #434655;
+  --color-outline: #737686;
+  --color-outline-variant: #c3c6d7;
+  --color-tertiary: #006243;
+  --color-tertiary-container: #007d57;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* View Section Visibility */
+.screen-view {
+  display: none;
+}
+.screen-view.active {
+  display: flex;
+}
+
+/* Monospace font utilities */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* SVG Resource Allocation Graph (RAG) Styling */
+.rag-canvas {
+  background-color: #f8fafc;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 16px 16px;
+  cursor: grab;
+  user-select: none;
+}
+.rag-canvas:active {
+  cursor: grabbing;
+}
+
+/* Process Node (Circle) */
+.rag-node-process {
+  fill: #ffffff;
+  stroke: #2563eb;
+  stroke-width: 2px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.rag-node-process:hover {
+  stroke-width: 3px;
+  filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.25));
+}
+.rag-node-process.waiting {
+  stroke: #d97706;
+  fill: #fffbeb;
+}
+.rag-node-process.deadlocked {
+  stroke: #e11d48;
+  fill: #fff1f2;
+  animation: pulse-deadlock 2s infinite ease-in-out;
+}
+.rag-node-process.terminated {
+  stroke: #94a3b8;
+  fill: #f1f5f9;
+  opacity: 0.6;
+}
+
+/* Resource Node (Rounded Rectangle) */
+.rag-node-resource {
+  fill: #ffffff;
+  stroke: #0f172a;
+  stroke-width: 2px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.rag-node-resource:hover {
+  stroke-width: 3px;
+  filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.2));
+}
+
+/* Graph Edges */
+.rag-edge-alloc {
+  stroke: #059669;
+  stroke-width: 1.75px;
+  stroke-linecap: round;
+  transition: stroke 0.2s;
+}
+.rag-edge-req {
+  stroke: #d97706;
+  stroke-width: 1.75px;
+  stroke-dasharray: 4 3;
+  stroke-linecap: round;
+  transition: stroke 0.2s;
+}
+.rag-edge-deadlocked {
+  stroke: #e11d48 !important;
+  stroke-width: 2.5px !important;
+  stroke-dasharray: 5 3;
+  animation: pulse-edge 1.5s infinite;
+}
+
+/* Marker Arrowheads */
+#marker-alloc {
+  fill: #059669;
+}
+#marker-req {
+  fill: #d97706;
+}
+#marker-deadlock {
+  fill: #e11d48;
+}
+
+@keyframes pulse-deadlock {
+  0%, 100% {
+    stroke-width: 2px;
+    filter: drop-shadow(0 0 0 rgba(225, 29, 72, 0));
+  }
+  50% {
+    stroke-width: 3.5px;
+    filter: drop-shadow(0 0 8px rgba(225, 29, 72, 0.45));
+  }
+}
+
+@keyframes pulse-edge {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  background-color: rgba(11, 28, 48, 0.45);
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s ease;
+}
+
+/* Toast Notifications Container */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast-msg {
+  pointer-events: auto;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  transform: translateY(10px);
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toast-msg.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Table row highlight on hover */
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.toast-item {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 420px;
+}
+.toast-info {
+  background-color: #0b1c30;
+  color: #ffffff;
+  border-left: 4px solid #2563eb;
+}
+.toast-success {
+  background-color: #004d34;
+  color: #ffffff;
+  border-left: 4px solid #85f8c4;
+}
+.toast-warning {
+  background-color: #78350f;
+  color: #ffffff;
+  border-left: 4px solid #f59e0b;
+}
+.toast-error {
+  background-color: #7f1d1d;
+  color: #ffffff;
+  border-left: 4px solid #f87171;
+}
